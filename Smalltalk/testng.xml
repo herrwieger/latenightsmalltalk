@@ -1,0 +1,13 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="AllTests" verbose="1">
+	<test name="AllPackages">
+		<packages>
+			<package name="de.wieger.smalltalk.parser"/>
+			<package name="de.wieger.smalltalk.smile"/>
+			<package name="de.wieger.smalltalk.universe"/>
+			<package name="de.wieger.smalltalk.script"/>
+			<package name="smalltalk"/>
+		</packages>
+	</test>
+</suite>

@@ -1,0 +1,30 @@
+<project name="Smalltalk" default="generateParsers">
+
+	<property file="build.properties"/>
+	
+	<macrodef name="myAntlr">
+		<attribute name="targetDir"/>
+		<attribute name="grammarFile"/>
+		<sequential>
+			<java
+				classpath	= "${build.lib}/antlr.org/antlr/antlr-2.7.7.jar"
+				classname	= "antlr.Tool"
+				fork		= "true"
+			>
+				<arg line	= "-o @{targetDir}"/>
+				<arg value	= "@{grammarFile}"/>
+			</java>
+		</sequential>
+	</macrodef>
+	
+	<target name="generateParsers">
+		<myAntlr
+			targetdir	= "src/main/java-gen/de/wieger/smalltalk/parser"
+			grammarfile	= "src/main/antlr/de/wieger/smalltalk/parser/ClassReader.g"
+		/>
+		<myAntlr
+			targetdir	= "src/main/java-gen/de/wieger/smalltalk/parser"
+			grammarfile	= "src/main/antlr/de/wieger/smalltalk/parser/Smalltalk.g"
+		/>
+	</target>
+</project>
