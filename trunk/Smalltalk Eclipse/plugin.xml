@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+   <extension
+         id="nature"
+         name="SmalltalkNature"
+         point="org.eclipse.core.resources.natures">
+      <runtime>
+         <run
+               class="de.wieger.smalltalk.eclipse.core.SmalltalkNature">
+         </run>
+      </runtime>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="de.wieger.smalltalk.eclipse.ui.SmalltalkUIPreferenceInitializer">
+      </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.core.contenttype.contentTypes">
+      <content-type
+            base-type="org.eclipse.core.runtime.text"
+            default-charset="UTF-8"
+            describer="de.wieger.smalltalk.eclipse.core.SmalltalkContentDescriber"
+            file-extensions="st"
+            id="de.wieger.smalltalk.eclipse.SmalltalkContentType"
+            name="Smalltalk ContentType"
+            priority="high">
+      </content-type>
+   </extension>
+   <extension
+         id="smalltalk.documentSetup"
+         name="Smalltalk Documentsetup"
+         point="org.eclipse.core.filebuffers.documentSetup">
+      <participant
+            class="de.wieger.smalltalk.eclipse.ui.SmalltalkDocumentSetupParticipant"
+            extensions="st">
+      </participant>
+   </extension>
+   <extension
+         name="Document SetupParticipant"
+         point="org.eclipse.dltk.core.language">
+      <language
+            class="de.wieger.smalltalk.eclipse.core.SmalltalkLanguageToolkit"
+            nature="de.wieger.smalltalk.eclipse.nature"
+            priority="0">
+      </language>
+   </extension>
+   <extension
+         point="org.eclipse.dltk.core.sourceParsers">
+      <parser
+            class="de.wieger.smalltalk.eclipse.core.SmalltalkSourceParser"
+            nature="de.wieger.smalltalk.eclipse.nature"
+            priority="0">
+      </parser>
+   </extension>
+   <extension
+         point="org.eclipse.dltk.core.sourceElementParsers">
+      <parser
+            class="de.wieger.smalltalk.eclipse.core.SmalltalkSourceElementParser"
+            nature="de.wieger.smalltalk.eclipse.nature"
+            priority="0">
+      </parser>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="de.wieger.smalltalk.eclipse.ui.editor.SmalltalkEditor"
+            default="true"
+            extensions="st"
+            icon="icons/document.gif"
+            id="de.wieger.smalltalk.eclipse.SmalltalkEditor"
+            name="Smalltalk Editor">
+         <contentTypeBinding
+               contentTypeId="de.wieger.smalltalk.eclipse.SmalltalkContentType">
+         </contentTypeBinding>
+      </editor>
+   </extension>
+   <extension
+         point="org.eclipse.dltk.ui.language">
+      <language
+            class="de.wieger.smalltalk.eclipse.ui.SmalltalkUILanguageToolkit"
+            nature="de.wieger.smalltalk.eclipse.nature">
+      </language>
+   </extension>
+
+</plugin>
