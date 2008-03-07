@@ -1,0 +1,54 @@
+<?xml version='1.0' ?> 
+<settings>
+  <resource name='src/main/antlr/de/wieger/smalltalk/parser/ClassReader.g'>
+    <property name='traceParser' value='false' />
+    <property name='docbookOutput' value='false' />
+    <property name='noTrace' value='true' />
+    <property name='normalOuput' value='true' />
+    <property name='installSmap' value='true' />
+    <property name='trace' value='false' />
+    <property name='traceTreeParser' value='false' />
+    <property name='htmlOutput' value='false' />
+    <property name='cleanWarnings' value='false' />
+    <property name='debug' value='false' />
+    <property name='superGrammars' value='' />
+    <property name='traceLexer' value='false' />
+    <property name='output' value='/Smalltalk/src/main/java-gen/de/wieger/smalltalk/parser' />
+    <property name='diagnosticOutput' value='false' />
+  </resource>
+  <resource name='src/main/antlr/de/wieger/smalltalk/parser/Smalltalk.g'>
+    <property name='traceParser' value='false' />
+    <property name='docbookOutput' value='false' />
+    <property name='noTrace' value='true' />
+    <property name='installSmap' value='true' />
+    <property name='normalOuput' value='true' />
+    <property name='trace' value='false' />
+    <property name='cleanWarnings' value='false' />
+    <property name='traceTreeParser' value='false' />
+    <property name='htmlOutput' value='false' />
+    <property name='debug' value='false' />
+    <property name='superGrammars' value='' />
+    <property name='traceLexer' value='false' />
+    <property name='output' value='/Smalltalk/src/main/java-gen/de/wieger/smalltalk/parser' />
+    <property name='diagnosticOutput' value='false' />
+  </resource>
+  <resource name='src/main/java/de/wieger/smalltalk/parser/Smalltalk.g'>
+    <property name='traceParser' value='false' />
+    <property name='docbookOutput' value='false' />
+    <property name='noTrace' value='false' />
+    <property name='installSmap' value='true' />
+    <property name='normalOuput' value='true' />
+    <property name='trace' value='false' />
+    <property name='cleanWarnings' value='false' />
+    <property name='traceTreeParser' value='true' />
+    <property name='htmlOutput' value='false' />
+    <property name='debug' value='false' />
+    <property name='superGrammars' value='' />
+    <property name='traceLexer' value='false' />
+    <property name='output' value='/Smalltalk/src/main/java-gen/de/wieger/smalltalk/parser' />
+    <property name='diagnosticOutput' value='false' />
+  </resource>
+  <resource name='**ANTLR-ECLIPSE-PLUGIN**'>
+    <property name='pluginVersion' value='2.7.6' />
+  </resource>
+</settings>
