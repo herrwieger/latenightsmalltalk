@@ -2,6 +2,7 @@ package de.wieger.smalltalk.parser;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -13,8 +14,15 @@ import antlr.ParserSharedInputState;
 import antlr.RecognitionException;
 import antlr.TokenBuffer;
 import antlr.TokenStream;
+import antlr.TokenStreamException;
+import de.wieger.smalltalk.smile.AbstractMethodInvocation;
 import de.wieger.smalltalk.smile.ClassDescription;
+import de.wieger.smalltalk.smile.Lookup;
 import de.wieger.smalltalk.smile.MethodDescription;
+import de.wieger.smalltalk.smile.Statement;
+import de.wieger.smalltalk.smile.StringLiteral;
+import de.wieger.smalltalk.smile.SymbolLiteral;
+import de.wieger.smalltalk.smile.Value;
 import de.wieger.smalltalk.universe.ClassDescriptionManager;
 
 /**
@@ -42,6 +50,7 @@ abstract class AbstractClassReader extends LLkParser implements ErrorListener {
 
     private ClassDescriptionManager fClassDescriptionManager;
     private Set<ClassDescription>   fParsedClassDescriptions = new HashSet<ClassDescription>();
+    private List<List<Statement>>   fParsedExpressions       = new ArrayList<List<Statement>>();
     private ClassDescription        fCurrentClass;
     private String                  fCurrentCategory;
 
@@ -80,77 +89,111 @@ abstract class AbstractClassReader extends LLkParser implements ErrorListener {
     //--------------------------------------------------------------------------
 
     void parseExpression(String pExpression, int pStart, int pEnd) {
-        StringTokenizer tokenizer   = getTokenizer(pExpression);
-
         try {
-            ClassAndToken   cat = getClassAndToken(tokenizer);
-            if (cat.fToken.toLowerCase().endsWith("subclass:")) {
-                subclass(cat.fToken, cat.fClass, tokenizer, pExpression);
-            } else if (cat.fToken.equals("addInterface:")){
-                addInterface(cat.fClass, tokenizer);
-            } else if (cat.fToken.equals("addConstructor:")){
-                addConstructor(cat.fClass, tokenizer);
-            } else if (cat.fToken.equals("addMethod:")){
-                addMethod(cat.fClass, tokenizer);
-            } else if (cat.fToken.equals("addField:")){
-                addField(cat.fClass, tokenizer);
-            } else {
-                throw new RuntimeException("expression=" + pExpression + " not supported");
+            SmalltalkParser parser      = ParserUtil.getParser(pExpression);
+            List<Statement> statements  = parser.parseExpression();
+            if (!evaluate(statements)) {
+                fParsedExpressions.add(statements);
             }
-        } catch (RuntimeException ex) {
+        } catch (Exception ex) {
             notifyListeners(ex.getMessage(), pStart, pEnd);
         }
     }
 
-    private void subclass(String keyword, ClassDescription pSuperClassDescription, StringTokenizer tokenizer,
-            String pExpression) {
-        String className    = removeLiteralHash(nextToken(tokenizer));
-        matchKeyword("instanceVariableNames:", tokenizer);
-        String instVars     = getString(tokenizer);
-        matchKeyword("classVariableNames:", tokenizer);
-        String classVars    = getString(tokenizer);
-        matchKeyword("poolDictionaries:", tokenizer);
-        String poolDicts    = getString(tokenizer);
-        matchKeyword("category:", tokenizer);
-        String category     = getString(tokenizer);
+    /**
+     * tries to evaluate filein format expressions: subclass:, addInterface:
+     * addConstructor: addMethod: addField:.
+     * @param statements
+     * @return true, if it could evaluate the statements.
+     */
+    private boolean evaluate(List<Statement> statements) {
+        if (statements.size() < 2 || statements.size() > 3) {
+            return false;
+        }
+        
+        Iterator<Statement> statementIterator = statements.iterator();
+        Statement           statement         = statementIterator.next();
+        if (!(statement instanceof Lookup)) {
+            return false;
+        }
+        ClassDescription classDescription  = fClassDescriptionManager.getClassDescription(((Lookup) statement).getIdentifier());                     
+
+        statement = statementIterator.next();
+        if (statement instanceof AbstractMethodInvocation
+                && ((AbstractMethodInvocation) statement).getSelector().equals("class")) {
+            classDescription     = classDescription.getClazz();
+            statement = statementIterator.next();
+        }
+        
+        if (!(statement instanceof AbstractMethodInvocation)) {
+            return false;
+        }
+        AbstractMethodInvocation methodInvocation = (AbstractMethodInvocation) statement;
+        String                   selector         = methodInvocation.getSelector();
+        if (selector.toLowerCase().endsWith("subclassinstancevariablenamesclassvariablenamespooldictionariescategory")) {
+            subclass(selector, classDescription, methodInvocation.getParams());
+        } else if (selector.equals("addInterface")){
+            addInterface(classDescription, methodInvocation.getParams());
+        } else if (selector.equals("addConstructor")){
+            addConstructor(classDescription, methodInvocation.getParams());
+        } else if (selector.equals("addMethod")){
+            addMethod(classDescription, methodInvocation.getParams());
+        } else if (selector.equals("addField")){
+            addField(classDescription, methodInvocation.getParams());
+        } else {
+            return false;
+        }
+        return true;
+    }
+
+    private void subclass(String pSelector, ClassDescription pSuperClassDescription, List<Value> pParams) {
+        String className    = ((SymbolLiteral)pParams.get(0)).getSymbol();
+        String instVars     = getString(pParams, 1);
+        String classVars    = getString(pParams, 2);
+        String poolDicts    = getString(pParams, 3);
+        String category     = getString(pParams, 4);
 
         ClassDescription newClassDescription;
-        if (keyword.equals("subclass:")) {
+        if (pSelector.startsWith("subclass")) {
             newClassDescription = pSuperClassDescription.subclass(
                     className, instVars, classVars, poolDicts, category);
-        } else if (keyword.equals("variableSubclass:")){
+        } else if (pSelector.startsWith("variableSubclass")){
             newClassDescription = pSuperClassDescription.variableSubclass(
                     className, instVars, classVars, poolDicts, category);
-        } else if (keyword.equals("variableByteSubclass:")){
+        } else if (pSelector.startsWith("variableByteSubclass")){
             newClassDescription = pSuperClassDescription.variableByteSubclass(
                     className, instVars, classVars, poolDicts, category);
-        } else if (keyword.equals("variableCharSubclass:")){
+        } else if (pSelector.startsWith("variableCharSubclass")){
             newClassDescription = pSuperClassDescription.variableCharSubclass(
                     className, instVars, classVars, poolDicts, category);
         } else {
-            throw new RuntimeException("expression=" + pExpression + " not supported");
+            throw new RuntimeException("expression=" + pSelector + " not supported");
         }
         fParsedClassDescriptions.add(newClassDescription);
         fParsedClassDescriptions.add(newClassDescription.getClazz());
     }
 
-    private void addInterface(ClassDescription pClassDescription, StringTokenizer pTokenizer) {
-        String  interfaceName = getString(pTokenizer);
+    public String getString(List<Value> pParams, int pIndex) {
+        return ((StringLiteral)pParams.get(pIndex)).getString();
+    }
+
+    private void addInterface(ClassDescription pClassDescription, List<Value> pParams) {
+        String  interfaceName = getString(pParams, 0);
         pClassDescription.addInterface(interfaceName);
     }
 
-    private void addConstructor(ClassDescription pClassDescription, StringTokenizer pTokenizer) {
-        String  constructor = getString(pTokenizer);
+    private void addConstructor(ClassDescription pClassDescription, List<Value> pParams) {
+        String  constructor = getString(pParams, 0);
         pClassDescription.addNativeConstructor(constructor);
     }
 
-    private void addMethod(ClassDescription pClassDescription, StringTokenizer pTokenizer) {
-        String  method = getString(pTokenizer);
+    private void addMethod(ClassDescription pClassDescription, List<Value> pParams) {
+        String  method = getString(pParams, 0);
         pClassDescription.addNativeMethod(method);
     }
 
-    private void addField(ClassDescription pClassDescription, StringTokenizer pTokenizer) {
-        String  field = getString(pTokenizer);
+    private void addField(ClassDescription pClassDescription, List<Value> pParams) {
+        String  field = getString(pParams, 0);
         pClassDescription.addNativeField(field);
     }
 
@@ -168,7 +211,6 @@ abstract class AbstractClassReader extends LLkParser implements ErrorListener {
             notifyListeners(ex.getMessage(), pStart, pEnd);
         }
     }
-
 
     private ClassAndToken getClassAndToken(StringTokenizer pTokenizer) {
         ClassAndToken   cat = new ClassAndToken();
@@ -188,6 +230,7 @@ abstract class AbstractClassReader extends LLkParser implements ErrorListener {
         ClassDescription    fClass;
         String              fToken;
     }
+
 
     void parseMethod(String pMethod, int pStart, int pEnd) {
         SmalltalkParser parser      = ParserUtil.getParser(pMethod);
@@ -227,11 +270,6 @@ abstract class AbstractClassReader extends LLkParser implements ErrorListener {
         smallString.deleteCharAt(0);
         smallString.setLength(smallString.length()-1);
         return smallString.toString();
-    }
-
-    private void matchKeyword(String pExpectedKeyword, StringTokenizer pTokenizer) {
-        String keyword  = nextToken(pTokenizer);
-        matchKeyword(pExpectedKeyword, keyword);
     }
 
     private void matchKeyword(String pExpectedKeyword, String keyword) {
