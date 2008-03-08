@@ -1,7 +1,3 @@
-Introduction to Latenight Smalltalk.
-
-= Introduction =
-
 Latenight Smalltalk currently consists of two eclipse projects:
  * Smalltalk
  * Smalltalk Eclipse
