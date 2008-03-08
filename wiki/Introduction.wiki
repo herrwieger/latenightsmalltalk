@@ -2,7 +2,7 @@
 
 = Introduction =
 
-Latenate Smalltalk currently consists of two eclipse projects:
+Latenight Smalltalk currently consists of two eclipse projects:
 * Smalltalk
 * Smalltalk Eclipse
 
