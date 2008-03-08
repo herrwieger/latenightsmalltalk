@@ -6,9 +6,11 @@ import java.util.Stack;
 import org.apache.log4j.Logger;
 
 import antlr.ParserSharedInputState;
+import antlr.RecognitionException;
 import antlr.Token;
 import antlr.TokenBuffer;
 import antlr.TokenStream;
+import antlr.TokenStreamException;
 import de.wieger.commons.lang.StringUtil;
 import de.wieger.smalltalk.smile.AbstractMethodDescription;
 import de.wieger.smalltalk.smile.BlockConstructor;
@@ -24,9 +26,11 @@ import de.wieger.smalltalk.smile.NumberLiteral;
 import de.wieger.smalltalk.smile.Scope;
 import de.wieger.smalltalk.smile.ScopedVariable;
 import de.wieger.smalltalk.smile.SmileBuilder;
+import de.wieger.smalltalk.smile.Statement;
 import de.wieger.smalltalk.smile.StringLiteral;
 import de.wieger.smalltalk.smile.SymbolLiteral;
 import de.wieger.smalltalk.smile.Value;
+import de.wieger.smalltalk.smile.ClassDescription.VariabilityType;
 
 
 abstract class AbstractSmalltalkParser extends antlr.LLkParser {
@@ -42,9 +46,13 @@ abstract class AbstractSmalltalkParser extends antlr.LLkParser {
     // instance variables
     //--------------------------------------------------------------------------
 
-    private ClassDescription                    fCurrentClass;
-    private Stack<AbstractMethodDescription>    fBlockScopeStack = new Stack<AbstractMethodDescription>();
+    private ClassDescription                 fCurrentClass;
+    private Stack<AbstractMethodDescription> fBlockScopeStack = new Stack<AbstractMethodDescription>();
 
+    private ClassDescription                 fDummyClass      = new ClassDescription(null, "Dummy", null, null,
+                                                                        VariabilityType.NONE);
+    private MethodDescription                fDummyMethod     = new MethodDescription("dummy", "dummy", fDummyClass);
+    
 
 
     //--------------------------------------------------------------------------
@@ -112,6 +120,24 @@ abstract class AbstractSmalltalkParser extends antlr.LLkParser {
 
     
     
+    //--------------------------------------------------------------------------  
+    // parsing methods
+    //--------------------------------------------------------------------------
+
+    public List<Statement> parseExpression() throws RecognitionException, TokenStreamException {
+        SmileBuilder    builder     = new SmileBuilder();
+        setCurrentClass(fDummyClass);
+        pushBlockScope(fDummyMethod);
+        expression(builder);
+        return builder.getStatements();
+    }
+
+    
+    
+    public abstract Value expression(SmileBuilder pBuilder) throws RecognitionException, TokenStreamException;
+
+    
+
     //--------------------------------------------------------------------------
     // builder methods
     //--------------------------------------------------------------------------

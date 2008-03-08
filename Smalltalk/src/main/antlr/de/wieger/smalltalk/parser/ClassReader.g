@@ -81,7 +81,10 @@ executableExpression {
 }:
 	expr=content {
 		LOG.debug("expression=" + expr.toString());
-		parseExpression(expr.toString(), expr.getStart(), expr.getEnd());
+		String expressionContent = expr.toString();
+		// remove trailing "!"
+		expressionContent = expressionContent.substring(0, expressionContent.length -1);
+		parseExpression(expressionContent, expr.getStart(), expr.getEnd());
 	}
 	BANG;
 
