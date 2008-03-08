@@ -3,6 +3,7 @@ package de.wieger.smalltalk.parser;
 import static org.testng.Assert.*;
 
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import de.wieger.smalltalk.smile.ClassDescription;
@@ -11,7 +12,7 @@ import de.wieger.smalltalk.universe.Universe;
 
 
 
-public class TestAbstractClassReader {
+public class TestAbstractClassReader  implements ErrorListener {
     //--------------------------------------------------------------------------
     // inner classes
     //--------------------------------------------------------------------------
@@ -37,12 +38,18 @@ public class TestAbstractClassReader {
     //--------------------------------------------------------------------------
 
     @BeforeClass
-    public static void setUp() {
+    public static void beforeClass() {
         sfClassReader.setClassDescriptionManager(sfUniverse);
     }
 
 
+    @BeforeTest
+    public void setUp() {
+        sfClassReader.addErrorListener(this);
+    }
 
+    
+    
     //--------------------------------------------------------------------------
     // test methods
     //--------------------------------------------------------------------------
@@ -139,5 +146,16 @@ public class TestAbstractClassReader {
         sfClassReader.parseMethodsFor("Class methodsFor: 'accessing'", 0, 0);
         assertEquals(sfClassReader.getCurrentClass().getName(), "Class");
         assertEquals(sfClassReader.getCurrentCategory(), "accessing");
+    }
+
+   
+
+    // --------------------------------------------------------------------------
+    // ErrorListener methods
+    // --------------------------------------------------------------------------
+
+    @Override
+    public void error(String pMessage, int pStart, int pEnd) {
+        fail(pMessage);
     }
 }
