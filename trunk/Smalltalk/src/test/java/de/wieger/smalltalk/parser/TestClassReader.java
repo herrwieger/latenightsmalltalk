@@ -12,7 +12,7 @@ import antlr.TokenStreamException;
 import de.wieger.smalltalk.universe.JavassistUniverse;
 
 
-public class TestClassReader implements ErrorListener {
+public class TestClassReader {
 
     @Test
     public void testClassReader() throws FileNotFoundException, RecognitionException, TokenStreamException {
@@ -28,20 +28,8 @@ public class TestClassReader implements ErrorListener {
         String      expression = "Behavior class subclass: #Class instanceVariableNames: '' classVariableNames: '' "
                                          + "poolDictionaries: '' category: ''";
         ClassReader reader     = new ClassReader((ClassReaderLexer) null);
-        reader.addErrorListener(this);
         reader.setClassDescriptionManager(new JavassistUniverse());
         reader.parseExpression(expression, 0, 0);
         assertEquals(reader.getParsedClassDescriptions().size(), 2);
-    }
-    
-
-
-    // --------------------------------------------------------------------------
-    // ErrorListener methods
-    // --------------------------------------------------------------------------
-
-    @Override
-    public void error(String pMessage, int pStart, int pEnd) {
-        fail(pMessage);
     }
 }
