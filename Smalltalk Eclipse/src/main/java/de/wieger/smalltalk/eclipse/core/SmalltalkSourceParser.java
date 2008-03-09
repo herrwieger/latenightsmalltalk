@@ -96,7 +96,7 @@ public class SmalltalkSourceParser implements ISourceParser, ClassDescriptionMan
     public ClassReader parse(char[] pSource) {
         ClassReaderLexer    lexer       = new ClassReaderLexer(new CharArrayReader(pSource));
         ClassReader         reader      = new ClassReader(lexer);
-        reader.setClassDescriptionManager(this);
+        reader.setup(this, reader);
         reader.addErrorListener(this);
         try {
             reader.fileIn();
