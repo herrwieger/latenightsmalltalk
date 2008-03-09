@@ -27,7 +27,7 @@ public class SmalltalkScriptEngineFactory implements ScriptEngineFactory {
     //--------------------------------------------------------------------------
 
     public String getEngineName() {
-        return "Smalltalk Renaissance";
+        return "Latenight Smalltalk";
     }
 
     public String getEngineVersion() {
@@ -59,7 +59,7 @@ public class SmalltalkScriptEngineFactory implements ScriptEngineFactory {
     }
 
     public String getOutputStatement(String pString) {
-        return "Transcript show:'" + pString + "';cr";
+        return "Transcript show:'" + pString + "';cr!";
     }
 
     public Object getParameter(String pKey) {

@@ -55,6 +55,11 @@ public abstract class AbstractMethodDescription extends AbstractMethod {
         return fSmileBuilder;
     }
 
+    public List<Statement> getStatements() {
+        return fSmileBuilder.getStatements();
+    }
+
+    
     public void addParameters(List<String> pParameters) {
         for (String paramName : pParameters) {
             addParameter(paramName);

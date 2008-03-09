@@ -24,7 +24,7 @@ public class TestScriptEngine {
     @Test
     public void testEval() throws ScriptException {
         ScriptEngine engine = getEngine();
-        engine.eval("Transcript show:'HelloWorld';cr");
+        engine.eval("Transcript show:'HelloWorld';cr!Transcript show:'Hello again'!");
     }
 
     @Test

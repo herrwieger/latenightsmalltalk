@@ -54,9 +54,9 @@ public class JavasourceUniverse extends AbstractUniverse {
         
         for (ClassDescription classDescription : pClassDescriptionsToCompile) {
             for (MethodDescription methodDescription : classDescription.getMethodDescriptions()) {
-                findInvocations(directMethods, methodDescription.getSmileBuilder().getStatements());
+                findInvocations(directMethods, methodDescription.getStatements());
                 for (BlockDescription blockDescription : methodDescription.getBlockDescriptions()) {
-                    findInvocations(directMethods, blockDescription.getSmileBuilder().getStatements());
+                    findInvocations(directMethods, blockDescription.getStatements());
                 }
             }
         }

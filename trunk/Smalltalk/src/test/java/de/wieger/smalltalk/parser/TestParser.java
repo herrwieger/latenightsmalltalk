@@ -190,7 +190,7 @@ public class TestParser {
 
     private SmalltalkParser setupParser(String pStringToParse) {
         Universe            universe    = new JavassistUniverse();
-        SmalltalkParser     parser      = ParserUtil.getParser(pStringToParse);
+        SmalltalkParser     parser      = ParserFactory.getParser(pStringToParse);
         ClassDescription    smallClass  = universe.getBaseClass().subclass("ParserTest");
         parser.setCurrentClass(smallClass);
         return parser;

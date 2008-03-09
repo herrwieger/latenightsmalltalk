@@ -44,7 +44,7 @@ public class TestCompileMethod {
 
     @Test
     public void testHelloWorld() throws Exception {
-        fScriptEngine.eval("Transcript show: 'Hello World!';cr;cr.");
+        fScriptEngine.eval("Transcript show: 'Hello World!!';cr;cr.!");
     }
 
 
@@ -55,34 +55,34 @@ public class TestCompileMethod {
 
     @Test
     public void testReturn42() throws Exception {
-        assertEquals(fScriptEngine.eval("^ 42"), fScriptEngine.newInteger(42));
+        assertEquals(fScriptEngine.eval("^ 42!"), fScriptEngine.newInteger(42));
     }
 
 
 
     @Test
     public void testCalc35() throws Exception {
-        assertEquals(fScriptEngine.eval("^3 + 4 * 5 ."), fScriptEngine.newInteger(35));
+        assertEquals(fScriptEngine.eval("^3 + 4 * 5 .!"), fScriptEngine.newInteger(35));
     }
 
     @Test
     public void testCalc23() throws Exception {
-        assertEquals(fScriptEngine.eval("^3 + (4 * 5) ."), fScriptEngine.newInteger(23));
+        assertEquals(fScriptEngine.eval("^3 + (4 * 5) .!"), fScriptEngine.newInteger(23));
     }
 
     @Test
     public void testCalcBoolean() throws Exception {
-        assertSame(fScriptEngine.eval("^true & false ."), fScriptEngine.getFalse());
+        assertSame(fScriptEngine.eval("^true & false .!"), fScriptEngine.getFalse());
     }
 
     @Test
     public void testCalcBoolean1() throws Exception {
-        assertSame(fScriptEngine.eval("^true & false | true ."), fScriptEngine.getTrue());
+        assertSame(fScriptEngine.eval("^true & false | true .!"), fScriptEngine.getTrue());
     }
 
     @Test
     public void testCalcBoolean2() throws Exception {
-        assertSame(fScriptEngine.eval("^(true & false | true) not."), fScriptEngine.getFalse());
+        assertSame(fScriptEngine.eval("^(true & false | true) not.!"), fScriptEngine.getFalse());
     }
 
 
@@ -105,12 +105,12 @@ public class TestCompileMethod {
 
     @Test
     public void testObjectIsNotNil() throws Exception {
-        assertSame(fScriptEngine.eval("^self notNil"), fScriptEngine.getTrue());
+        assertSame(fScriptEngine.eval("^self notNil!"), fScriptEngine.getTrue());
     }
 
     @Test
     public void testNilIsNil() throws Exception {
-        assertSame(fScriptEngine.eval("^nil isNil"), fScriptEngine.getTrue());
+        assertSame(fScriptEngine.eval("^nil isNil!"), fScriptEngine.getTrue());
     }
 
 
@@ -120,7 +120,7 @@ public class TestCompileMethod {
 
     @Test
     public void testBlock() throws Exception {
-        fScriptEngine.eval("[Transcript show:'Hello Block';cr.] value.");
+        fScriptEngine.eval("[Transcript show:'Hello Block';cr.] value.!");
     }
 
 
