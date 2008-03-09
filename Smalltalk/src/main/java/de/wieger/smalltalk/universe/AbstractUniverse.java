@@ -176,8 +176,11 @@ public abstract class AbstractUniverse implements Universe {
     }
 
     public void compileClasses() {
-        compileClasses(fClassDescriptionsToCompile);
-        fClassDescriptionsToCompile.clear();
+        try {
+            compileClasses(fClassDescriptionsToCompile);
+        } finally {
+            fClassDescriptionsToCompile.clear();
+        }
     }
 
 
@@ -190,7 +193,7 @@ public abstract class AbstractUniverse implements Universe {
             FileReader          fileReader  = new FileReader(pFilename);
             ClassReaderLexer    lexer       = new ClassReaderLexer(fileReader);
             ClassReader         reader      = new ClassReader(lexer);
-            reader.setClassDescriptionManager(this);
+            reader.setup(this, reader);
             reader.fileIn();
             fileReader.close();
         } catch (Exception ex) {

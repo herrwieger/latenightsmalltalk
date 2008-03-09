@@ -39,7 +39,7 @@ public class TestAbstractClassReader  implements ErrorListener {
 
     @BeforeClass
     public static void beforeClass() {
-        sfClassReader.setClassDescriptionManager(sfUniverse);
+        sfClassReader.setup(sfUniverse, sfClassReader);
     }
 
 
@@ -144,8 +144,8 @@ public class TestAbstractClassReader  implements ErrorListener {
         sfUniverse.getBaseClass().subclass("Class");
 
         sfClassReader.parseMethodsFor("Class methodsFor: 'accessing'", 0, 0);
-        assertEquals(sfClassReader.getCurrentClass().getName(), "Class");
-        assertEquals(sfClassReader.getCurrentCategory(), "accessing");
+        assertEquals(sfClassReader.getClassForMethods().getName(), "Class");
+        assertEquals(sfClassReader.getCategoryForMethods(), "accessing");
     }
 
    

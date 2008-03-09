@@ -15,9 +15,12 @@ import org.apache.commons.io.IOUtils;
 import smalltalk.shared.MethodInvoker;
 import antlr.RecognitionException;
 import antlr.TokenStreamException;
-import de.wieger.smalltalk.parser.ParserUtil;
+import de.wieger.smalltalk.parser.ClassReader;
+import de.wieger.smalltalk.parser.MethodDescriptionFactory;
+import de.wieger.smalltalk.parser.ParserFactory;
 import de.wieger.smalltalk.parser.SmalltalkParser;
 import de.wieger.smalltalk.smile.ClassDescription;
+import de.wieger.smalltalk.smile.MethodDescription;
 import de.wieger.smalltalk.universe.JavassistUniverse;
 
 
@@ -61,15 +64,44 @@ public class SmalltalkScriptEngine extends AbstractScriptEngine {
 
     public Object eval(String pScript, ScriptContext pScriptContext) throws ScriptException {
         fJavassistUniverse.makeCurrentUniverse();
-        String classname = "Script" + fScriptId++;
-        ClassDescription    classDescription = fJavassistUniverse.getBaseClass().subclass(classname);
         try {
-            parseMethod(classDescription, SCRIPT_METHODNAME + " " + pScript);
-            return compileAndRun(classDescription, SCRIPT_METHODNAME);
+            String           classname        = "Script" + fScriptId++;
+            ClassDescription classDescription = fJavassistUniverse.getBaseClass().subclass(classname);            
+            
+            parseScript(pScript, classDescription);
+            compile();
+            
+            Object result = null;
+            for (MethodDescription methodDescription : classDescription.getMethodDescriptions()) {
+                result = run(classDescription, methodDescription.getName());
+            }                
+            return result;
         } catch (Exception ex) {
             throw new ScriptException(ex);
         }
     }
+
+
+
+    private String scriptMethodName(int i) {
+        return SCRIPT_METHODNAME + i;
+    }
+
+    private void parseScript(String pScript, ClassDescription pClassDescription) throws RecognitionException, TokenStreamException {
+        ClassReader classReader = ParserFactory.getClassReader(pScript, fJavassistUniverse, new MethodDescriptionFactory() {
+            int fMethodIndex=0;
+            
+            @Override
+            public MethodDescription createMethodDescription(ClassDescription pClassDescription) {
+                String methodName = SCRIPT_METHODNAME + fMethodIndex++;
+                return new MethodDescription(methodName, methodName, pClassDescription);
+            }
+        });
+        classReader.setClassForExpressions(pClassDescription);
+        classReader.fileIn();
+    }
+
+
 
     public Object eval(Reader pReader, ScriptContext pScriptContext) throws ScriptException {
         try {
@@ -107,13 +139,25 @@ public class SmalltalkScriptEngine extends AbstractScriptEngine {
     }
     
     public void parseMethod(ClassDescription pClassDescription, String pMethodSource) throws RecognitionException, TokenStreamException {
-        SmalltalkParser parser = ParserUtil.getParser(pMethodSource);
+        SmalltalkParser parser = ParserFactory.getParser(pMethodSource);
         parser.setCurrentClass(pClassDescription);
         parser.method();
     }
 
+    
     public Object compileAndRun(ClassDescription pClassDescription, String pMethodName, Object ... pArgs) throws Exception {
+        compile();
+        return run(pClassDescription, pMethodName, pArgs);
+    }
+
+
+
+    private void compile() {
         fJavassistUniverse.compileClasses();
+    }
+
+    private Object run(ClassDescription pClassDescription, String pMethodName, Object... pArgs)
+            throws InstantiationException, IllegalAccessException {
         String  className   = pClassDescription.getName();
         Class   clazz       = fJavassistUniverse.getClassNamed(className);
 

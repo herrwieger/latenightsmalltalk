@@ -64,7 +64,7 @@ public class JavaCoder implements StatementVisitor, ValueVisitor {
         } else {
             fOuterClassPrefix = "";
         }
-        for (Statement statement : pAbstractMethodDescription.getSmileBuilder().getStatements()) {
+        for (Statement statement : pAbstractMethodDescription.getStatements()) {
             statement.accept(this);
         }
         return fCode.toString();

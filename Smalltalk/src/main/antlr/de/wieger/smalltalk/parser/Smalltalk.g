@@ -599,6 +599,11 @@ messagePattern returns[MethodDescription returnMethodDescription=null] {
 	}
 ;
 
+methodBody[MethodDescription pMethodDescription] returns[Value result]:
+	(temporaries[pMethodDescription])?
+	result = statements[pMethodDescription.getSmileBuilder(), NilLiteral.NIL]
+;
+
 method returns[MethodDescription returnMethodDescription=null] {
 	Value 				result;
 	MethodDescription	methodDescription;
@@ -607,8 +612,7 @@ method returns[MethodDescription returnMethodDescription=null] {
 		pushBlockScope(methodDescription);
 	}
 	(pragma[methodDescription])*
-	(temporaries[methodDescription])?
-	result = statements[methodDescription.getSmileBuilder(), NilLiteral.NIL] {
+	result = methodBody[methodDescription] {
 		// ANSI 3.4.2 Method definition: Otherwise the value of the method is the current binding of the reserved identifier 'self'.		
 		methodDescription.addReturnIfNecessary(Value.SELF);
 		popBlockScope();

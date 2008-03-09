@@ -14,7 +14,6 @@ import antlr.ParserSharedInputState;
 import antlr.RecognitionException;
 import antlr.TokenBuffer;
 import antlr.TokenStream;
-import antlr.TokenStreamException;
 import de.wieger.smalltalk.smile.AbstractMethodInvocation;
 import de.wieger.smalltalk.smile.ClassDescription;
 import de.wieger.smalltalk.smile.Lookup;
@@ -23,19 +22,20 @@ import de.wieger.smalltalk.smile.Statement;
 import de.wieger.smalltalk.smile.StringLiteral;
 import de.wieger.smalltalk.smile.SymbolLiteral;
 import de.wieger.smalltalk.smile.Value;
+import de.wieger.smalltalk.smile.ClassDescription.VariabilityType;
 import de.wieger.smalltalk.universe.ClassDescriptionManager;
 
 /**
  * The AbstractClassReader is the base class for parsing class and method
  * definitions using Smalltalks fileout format.
  *
- * DESIGN_DECISION: I'm not using ANTLR to parse the "subclass" or "methodsFor"
+ * DESIGN_DECISION: I'm not using ANTLR to parse "methodsFor"
  * expressions. Currently it seems quite to complicated for me. Doing it manually
  * was easier. I might use the SmalltalkLexer later on parsing these expressions.
  *
  * @author thomas
  */
-abstract class AbstractClassReader extends LLkParser implements ErrorListener {
+abstract class AbstractClassReader extends LLkParser implements ErrorListener, MethodDescriptionFactory {
     //--------------------------------------------------------------------------
     // class variables
     //--------------------------------------------------------------------------
@@ -47,14 +47,21 @@ abstract class AbstractClassReader extends LLkParser implements ErrorListener {
     //--------------------------------------------------------------------------
     // instance variables
     //--------------------------------------------------------------------------
+    
+    private ClassDescriptionManager     fClassDescriptionManager;
+    private MethodDescriptionFactory    fMethodDescriptionFactory;
 
-    private ClassDescriptionManager fClassDescriptionManager;
-    private Set<ClassDescription>   fParsedClassDescriptions = new HashSet<ClassDescription>();
-    private List<List<Statement>>   fParsedExpressions       = new ArrayList<List<Statement>>();
-    private ClassDescription        fCurrentClass;
-    private String                  fCurrentCategory;
+    private ClassDescription        fClassForExpressions        = new ClassDescription(null, "Dummy", null, null,
+                                                                          VariabilityType.NONE);
+    
+    private Set<ClassDescription>   fParsedClassDescriptions    = new HashSet<ClassDescription>();
+    private ClassDescription        fClassForMethods;
+    private String                  fCategoryForMethods;
 
     private List<ErrorListener>     fErrorListeners          = new ArrayList<ErrorListener>();
+
+
+
 
 
 
@@ -90,16 +97,18 @@ abstract class AbstractClassReader extends LLkParser implements ErrorListener {
 
     void parseExpression(String pExpression, int pStart, int pEnd) {
         try {
-            SmalltalkParser parser      = ParserUtil.getParser(pExpression);
-            List<Statement> statements  = parser.parseExpression();
-            if (!evaluate(statements)) {
-                fParsedExpressions.add(statements);
+            SmalltalkParser parser      = ParserFactory.getParser(pExpression);
+            MethodDescription methodDescription = fMethodDescriptionFactory.createMethodDescription(fClassForExpressions);
+            parser.parseStatements(fClassForExpressions, methodDescription);
+            if (!evaluate(methodDescription.getStatements())) {
+                fClassForExpressions.addMethodDescription(methodDescription);
             }
         } catch (Exception ex) {
             notifyListeners(ex.getMessage(), pStart, pEnd);
         }
     }
-
+    
+    
     /**
      * tries to evaluate filein format expressions: subclass:, addInterface:
      * addConstructor: addMethod: addField:.
@@ -107,7 +116,7 @@ abstract class AbstractClassReader extends LLkParser implements ErrorListener {
      * @return true, if it could evaluate the statements.
      */
     private boolean evaluate(List<Statement> statements) {
-        if (statements.size() < 2 || statements.size() > 3) {
+        if (statements.size() < 3 || statements.size() > 4) {
             return false;
         }
         
@@ -203,10 +212,10 @@ abstract class AbstractClassReader extends LLkParser implements ErrorListener {
 
         try {
             ClassAndToken   cat = getClassAndToken(tokenizer);
-            fCurrentClass = cat.fClass;
+            fClassForMethods = cat.fClass;
             fParsedClassDescriptions.add(cat.fClass);
             matchKeyword("methodsFor:", cat.fToken);
-            fCurrentCategory    = getString(tokenizer);
+            fCategoryForMethods    = getString(tokenizer);
         } catch (RuntimeException ex) {
             notifyListeners(ex.getMessage(), pStart, pEnd);
         }
@@ -233,11 +242,11 @@ abstract class AbstractClassReader extends LLkParser implements ErrorListener {
 
 
     void parseMethod(String pMethod, int pStart, int pEnd) {
-        SmalltalkParser parser      = ParserUtil.getParser(pMethod);
-        parser.setCurrentClass(fCurrentClass);
+        SmalltalkParser parser      = ParserFactory.getParser(pMethod);
+        parser.setCurrentClass(fClassForMethods);
         try {
             MethodDescription methodDescription = parser.method();
-            methodDescription.setCategory(fCurrentCategory);
+            methodDescription.setCategory(fCategoryForMethods);
             methodDescription.setSourceRange(pStart, pEnd);
         } catch (RecognitionException ex) {
             int position = ex.getColumn() - 1 + pStart;
@@ -247,11 +256,7 @@ abstract class AbstractClassReader extends LLkParser implements ErrorListener {
         }
     }
 
-
-    private String removeLiteralHash(String pString) {
-        return pString.substring(1);
-    }
-
+    
     StringTokenizer getTokenizer(String pExpression) {
         return new StringTokenizer(pExpression, " \t\n\r\f'", true);
     }
@@ -296,21 +301,31 @@ abstract class AbstractClassReader extends LLkParser implements ErrorListener {
     /**
      * TODO this belongs into the constructor!
      */
-    public void setClassDescriptionManager(ClassDescriptionManager pClassDescriptionManager) {
-        fClassDescriptionManager   = pClassDescriptionManager;
+    public void setup(ClassDescriptionManager pClassDescriptionManager, MethodDescriptionFactory pMethodDescriptionFactory) {
+        fClassDescriptionManager  = pClassDescriptionManager;
+        fMethodDescriptionFactory = pMethodDescriptionFactory;
     }
-
+    
     public Set<ClassDescription> getParsedClassDescriptions() {
         return fParsedClassDescriptions;
     }
     
-    ClassDescription getCurrentClass() {
-        return fCurrentClass;
+    public void setClassForMethods(ClassDescription pClassDescription) {
+        fClassForMethods = pClassDescription;
+    }
+    
+    ClassDescription getClassForMethods() {
+        return fClassForMethods;
     }
 
-    Object getCurrentCategory() {
-        return fCurrentCategory;
+    Object getCategoryForMethods() {
+        return fCategoryForMethods;
     }
+    
+    public void setClassForExpressions(ClassDescription pClassDescription) {
+        fClassForExpressions    = pClassDescription;
+    }
+    
     
     
     //--------------------------------------------------------------------------  
@@ -326,6 +341,16 @@ abstract class AbstractClassReader extends LLkParser implements ErrorListener {
             errorListener.error(pMessage, pStart, pEnd);
         }
     }
+    
+    
+    //--------------------------------------------------------------------------  
+    // MethodDescriptionFactory methods (implementation)
+    //--------------------------------------------------------------------------
+
+    public MethodDescription createMethodDescription(ClassDescription pClassDescription) {
+        return new MethodDescription("dummy", "dummy", fClassForExpressions);
+    }
+    
     
     
     //--------------------------------------------------------------------------  

@@ -26,11 +26,9 @@ import de.wieger.smalltalk.smile.NumberLiteral;
 import de.wieger.smalltalk.smile.Scope;
 import de.wieger.smalltalk.smile.ScopedVariable;
 import de.wieger.smalltalk.smile.SmileBuilder;
-import de.wieger.smalltalk.smile.Statement;
 import de.wieger.smalltalk.smile.StringLiteral;
 import de.wieger.smalltalk.smile.SymbolLiteral;
 import de.wieger.smalltalk.smile.Value;
-import de.wieger.smalltalk.smile.ClassDescription.VariabilityType;
 
 
 abstract class AbstractSmalltalkParser extends antlr.LLkParser {
@@ -48,12 +46,8 @@ abstract class AbstractSmalltalkParser extends antlr.LLkParser {
 
     private ClassDescription                 fCurrentClass;
     private Stack<AbstractMethodDescription> fBlockScopeStack = new Stack<AbstractMethodDescription>();
-
-    private ClassDescription                 fDummyClass      = new ClassDescription(null, "Dummy", null, null,
-                                                                        VariabilityType.NONE);
-    private MethodDescription                fDummyMethod     = new MethodDescription("dummy", "dummy", fDummyClass);
     
-
+    
 
     //--------------------------------------------------------------------------
     // constructors
@@ -124,17 +118,16 @@ abstract class AbstractSmalltalkParser extends antlr.LLkParser {
     // parsing methods
     //--------------------------------------------------------------------------
 
-    public List<Statement> parseExpression() throws RecognitionException, TokenStreamException {
-        SmileBuilder    builder     = new SmileBuilder();
-        setCurrentClass(fDummyClass);
-        pushBlockScope(fDummyMethod);
-        expression(builder);
-        return builder.getStatements();
+    public void parseStatements(ClassDescription pClassDescription, MethodDescription pMethodDescription)
+            throws RecognitionException, TokenStreamException {
+        setCurrentClass(pClassDescription);
+        pushBlockScope(pMethodDescription);
+        SmileBuilder smileBuilder = pMethodDescription.getSmileBuilder();
+        Value        result       = statements(smileBuilder, Value.SELF);
+        smileBuilder.addReturnIfNecessary(result);
     }
-
     
-    
-    public abstract Value expression(SmileBuilder pBuilder) throws RecognitionException, TokenStreamException;
+    public abstract Value statements(SmileBuilder pBuilder, Value pValue) throws RecognitionException, TokenStreamException;
 
     
 
