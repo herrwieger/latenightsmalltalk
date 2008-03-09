@@ -46,7 +46,6 @@ methodsList {
 }:
 	BANG
 	hdr=content {
-		LOG.debug("header=" + hdr);
 		parseMethodsFor(hdr.toString(), hdr.getStart(), hdr.getEnd());
 	} BANG
 	methods
@@ -59,7 +58,6 @@ methods {
 	(content BANG) =>
 		(
 			method=content {
-				LOG.debug("method=" + method.toString());
 				parseMethod(method.toString(), method.getStart(), method.getEnd());
 			}
 			BANG
@@ -69,7 +67,6 @@ methods {
 	(content END_METHODS) =>
 		(
 			method=content {
-				LOG.debug("lastMethod=" + method.toString());
 				parseMethod(method.toString(), method.getStart(), method.getEnd());
 			}
 			END_METHODS
@@ -80,11 +77,7 @@ executableExpression {
 	Content expr;
 }:
 	expr=content {
-		LOG.debug("expression=" + expr.toString());
-		String expressionContent = expr.toString();
-		// remove trailing "!"
-		expressionContent = expressionContent.substring(0, expressionContent.length -1);
-		parseExpression(expressionContent, expr.getStart(), expr.getEnd());
+		parseExpression(expr.toString(), expr.getStart(), expr.getEnd());
 	}
 	BANG;
 
